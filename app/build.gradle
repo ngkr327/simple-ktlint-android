@@ -21,6 +21,10 @@ android {
     }
 }
 
+configurations {
+    ktlint
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -32,10 +36,33 @@ dependencies {
     // Kotlin
     implementation deps.kotlin.stdlib
 
+    // Utils
+    ktlint deps.ktlint
+
     // Instrumented testing
     androidTestImplementation deps.atsl.runner
     androidTestImplementation deps.espresso.core
 
     // Unit testing
     testImplementation deps.junit
+}
+
+task ktlint(type: JavaExec, group: "verification") {
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "src/**/*.kt"
+    ignoreExitValue true
+}
+check.dependsOn ktlint
+
+task ktlintFormat(type: JavaExec, group: "formatting") {
+    description = "Fix Kotlin code style deviations."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "-F", "src/**/*.kt"
+    ignoreExitValue true
+}
+tasks.whenTaskAdded { task ->
+    task.dependsOn ktlintFormat
 }
